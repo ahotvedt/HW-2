@@ -1,6 +1,6 @@
 ---
 title: "MATH 216 Homework 2"
-author: "WRITE YOUR NAME HERE"
+author: "Amanda Hotvedt"
 output:
   html_document:
     toc: true
@@ -12,7 +12,9 @@ output:
 ```{r, echo=FALSE, message=FALSE}
 library(ggplot2)
 library(dplyr)
-library(readr) 
+library(readr)
+library(tidyr)
+library(forcats)
 ```
 
 
@@ -29,10 +31,10 @@ profiles <- read_csv(file="profiles.csv")
 
 Please indicate
 
-* Who you collaborated with:
-* Roughly how much time you spent on this HW so far:
+* Who you collaborated with: Katherine Hobbs
+* Roughly how much time you spent on this HW so far: 3 hours
 * The URL of the RPubs published URL [here](https://www.nhl.com/).
-* What gave you the most trouble:
+* What gave you the most trouble: I feel like I have set the Shiny app up correctly, but I am not sure how to tell it how to switch between the Comedies/Non-Comedies data even though the button exists
 * Any comments you have:
 
 
@@ -44,13 +46,78 @@ specifically on the relationship between gender and
 
 * `income`
 * `job`
-* One more categorical variable of your choice
+* One more categorical variable of your choice (I picked 'orientation')
 
 all keeping in mind in HW-3, you will be fitting a logistic regression to
 predict a user's gender based on these variables.
 
 ```{r, echo=TRUE, message=TRUE, warning=TRUE, fig.width=8, fig.height=4.5}
 
+profiles <- profiles %>%
+  mutate(is_female = ifelse(sex=="f", 1, 0))
+
+profiles2 <- profiles %>% 
+  select(is_female, job, income, orientation)
+
+# Percentage of users that are female
+profiles2 %>% 
+  summarise(mean(is_female))
+
+# Average income in full data set
+profiles2 %>% 
+  summarise("Average Income" = mean(income))
+
+# Average income, after filtering out the non-sensical incomes (e.g., -1)
+profiles2 %>% 
+  filter(income != -1) %>% 
+  summarise("Average Income" = mean(income))
+
+# Average income by gender
+profiles2 %>% 
+  filter(income != -1) %>% 
+  group_by(is_female) %>% 
+  summarise("Average Income By Gender" = mean(income))
+
+profiles3 <- profiles2 %>% 
+  filter(income != -1)
+
+ggplot(data=profiles3, aes(x=income, y=..density..)) +
+  geom_histogram(binwidth=30000) +
+  facet_wrap(~is_female)
+
+# Average Income by Job Title (still haven't figured out to arrange this in
+# descending order)
+profiles3 <- profiles3 %>%
+  group_by(job) %>% 
+  mutate(avg_inc_by_job = mean(income)) %>% 
+  arrange(desc())
+
+# Proportion of Females in Each Job
+profiles3 %>% 
+  group_by(job) %>% 
+  summarise("Proportion that are Female" = mean(is_female))
+
+# Average Income by Job Title by Gender
+income_by_job_gender <- profiles3 %>% 
+  group_by(job,is_female) %>% 
+  summarise("Average Income by Job Title" = mean(income)) %>% 
+  spread(key=is_female, value="Average Income by Job Title")
+
+# not finished plot yet...still having trouble making a visual
+# representation of the data here
+ggplot(data=income_by_job_gender, aes(x=job, y="Average Income by Job Title", fill=as.factor(is_female))) +
+  geom_point()
+
+# Proportion of Females by Orientation
+profiles2 %>% 
+  group_by(orientation) %>% 
+  summarise("Proportion that are Female" = mean(is_female))
+
+# Average income by Orientation
+profiles2 %>% 
+  filter(income != -1) %>% 
+  group_by(orientation) %>% 
+  summarise("Average Income By Orientation" = mean(income))
 ```
 
 
