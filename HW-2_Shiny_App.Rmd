@@ -19,17 +19,27 @@ library(ggplot2movies)
 You can embed Shiny inputs and outputs in your document. Outputs are automatically updated whenever inputs change.  This demonstrates how a standard R plot can be made interactive by wrapping it in the Shiny `renderPlot` function. The `selectInput` and `sliderInput` functions create the input widgets used to drive the plot.
 
 ```{r eruptions, echo=FALSE}
+
 inputPanel(
   
   # Select genre
-  radioButtons("Genre", label = "Genre:", c("Comedies"=ifelse("Comedy"==1, yes, no), "Non-Comedies"=ifelse("Comedy"==0, yes, no))
+  radioButtons("Genre", "Select Genre:", c("Comedies"="Comedies", "Non-comedies"="Non-comedies"))
 )
 
 renderPlot({
 
+movies2 <- movies %>% 
+  mutate(Genre = ifelse(Comedy == 1, "Comedies", "Non-comedies")) %>% 
+  filter(!is.na(budget)) %>% 
+  filter(Genre == input$Genre)
+  
   # Make a plot
-  ggplot(data=movies, aes(x=budget, y=rating)) + 
-    geom_point()
+  ggplot(data=movies2, aes(x=budget, y=rating)) + 
+    geom_point() +
+    geom_smooth() +
+    labs(x = "Budget for Movie", y = "Movie Rating", title = "Movie Ratings with Respect to Budget")
   
 })
 ```
+
+The graph in the shiny app demonstrates that a higher budget is correlated with higher ratings for Non-comedies, but for Comedies it seems that ratings stay pretty flat with an increased budget.

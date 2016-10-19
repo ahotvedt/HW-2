@@ -15,6 +15,7 @@ library(dplyr)
 library(readr)
 library(tidyr)
 library(forcats)
+library(knitr)
 ```
 
 
@@ -31,11 +32,11 @@ profiles <- read_csv(file="profiles.csv")
 
 Please indicate
 
-* Who you collaborated with: Katherine Hobbs
-* Roughly how much time you spent on this HW so far: 3 hours
-* The URL of the RPubs published URL [here](https://www.nhl.com/).
+* Who you collaborated with: Katherine Hobbs, Kyra Gray
+* Roughly how much time you spent on this HW so far: 8 hours
+* The URL of the RPubs published URL [here](http://rpubs.com/ahotvedt/219814).
 * What gave you the most trouble: I feel like I have set the Shiny app up correctly, but I am not sure how to tell it how to switch between the Comedies/Non-Comedies data even though the button exists
-* Any comments you have:
+* Any comments you have: For the Exploratory Data Analysis, I'm not totally sure how to recognize whether or not I am "done", because it feels like I could always do more!
 
 
 
@@ -73,42 +74,52 @@ profiles2 %>%
   summarise("Average Income" = mean(income))
 
 # Average income by gender
-profiles2 %>% 
-  filter(income != -1) %>% 
-  group_by(is_female) %>% 
-  summarise("Average Income By Gender" = mean(income))
-
 profiles3 <- profiles2 %>% 
   filter(income != -1)
+
+profiles3 %>% 
+  group_by(is_female) %>% 
+  summarise("Average Income By Gender" = mean(income))
 
 ggplot(data=profiles3, aes(x=income, y=..density..)) +
   geom_histogram(binwidth=30000) +
   facet_wrap(~is_female)
 
-# Average Income by Job Title (still haven't figured out to arrange this in
-# descending order)
-profiles3 <- profiles3 %>%
+ggplot(data=profiles3, aes(x=as.factor(is_female), y=income)) +
+  geom_boxplot() +
+  labs(x="Gender", y="Income", title="Average Income by Gender")
+
+# Average Income by Job Title
+profiles4 <- profiles3 %>%
   group_by(job) %>% 
-  mutate(avg_inc_by_job = mean(income)) %>% 
-  arrange(desc())
+  summarise(avg_inc_by_job = mean(income)) %>% 
+  arrange(desc(avg_inc_by_job)) 
 
-# Proportion of Females in Each Job
-profiles3 %>% 
-  group_by(job) %>% 
-  summarise("Proportion that are Female" = mean(is_female))
+profiles4 %>% 
+  knitr::kable()
 
-# Average Income by Job Title by Gender
-income_by_job_gender <- profiles3 %>% 
-  group_by(job,is_female) %>% 
-  summarise("Average Income by Job Title" = mean(income)) %>% 
-  spread(key=is_female, value="Average Income by Job Title")
-
-# not finished plot yet...still having trouble making a visual
-# representation of the data here
-ggplot(data=income_by_job_gender, aes(x=job, y="Average Income by Job Title", fill=as.factor(is_female))) +
+ggplot(data=profiles4, aes(x=job, y=avg_inc_by_job)) +
   geom_point()
 
-# Proportion of Females by Orientation
+# Proportion of Females in Each Job
+profiles5 <- profiles3 %>% 
+  group_by(job) %>% 
+  summarise(prop_female = mean(is_female)) %>% 
+  arrange(desc(prop_female))
+
+profiles5 %>% 
+  knitr::kable()
+
+# Average Income by Job Title by Gender
+profiles6 <- profiles3 %>% 
+  group_by(job,is_female) %>% 
+  summarise(avg_inc_by_job_gender = mean(income))
+
+ggplot(data=profiles6, aes(x=job, y=avg_inc_by_job_gender, col=as.factor(is_female))) +
+  geom_point() +
+  labs(x="Job Title", y="Average Income", title="Average Income by Job Title")
+  
+# Proportion of Females by Orientation 
 profiles2 %>% 
   group_by(orientation) %>% 
   summarise("Proportion that are Female" = mean(is_female))
@@ -120,7 +131,20 @@ profiles2 %>%
   summarise("Average Income By Orientation" = mean(income))
 ```
 
+Notes:
+- About 40% of the users in this data set are female.
 
+- Before taking out people who reported their income as -1, the average income in the data set was 20,033. After taking out those users, the average income was 104,395. It's important to note that the people who listed income = -1 may have done so for different reasons. Perhaps some have no income, and perhaps others just do not want to disclose their income online. I made the call to continue looking at only incomes greater than or equal to zero for the remainder of this analysis, but it's good to remember that many users were eliminated.
+
+- When you break down income by gender, men on average make 110,984 while women make only 86,633
+
+- The two highest paying jobs on average are "retired" and "rather not say", which makes you question if people are reporting incomes honestly
+
+- The job with the highest proportion of women working is clerical/administrative positions. Construction/craftsmanship has the smallest proportion of women, which means it has the highest proportion of male workers.
+
+- Additionally, we see that on average, amongst our users the job of clerical/administrative makes the smallest income. This is interesting because as we noted above, it also has the highest proportion of women working in these positions!
+
+- You can see from the graph titled "Average Income by Job Title" that for almost all jobs, men are paid a higher salary than women on average.
 
 ## Question 2:
 
