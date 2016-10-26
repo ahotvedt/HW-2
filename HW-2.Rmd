@@ -89,6 +89,20 @@ ggplot(data=profiles3, aes(x=as.factor(is_female), y=income)) +
   geom_boxplot() +
   labs(x="Gender", y="Income", title="Average Income by Gender")
 
+# Proportion of Females in Each Job
+profiles5 <- profiles3 %>% 
+  group_by(job) %>% 
+  summarise(prop_female = mean(is_female), total_number_of_workers=n()) %>% 
+  arrange(desc(prop_female))
+
+profiles5 %>% 
+  knitr::kable()
+
+ggplot(profiles5, aes(x=job, y=prop_female)) +
+  geom_bar(stat="identity") +
+  geom_hline(yintercept=0.4) +
+  coord_flip()
+
 # Average Income by Job Title
 profiles4 <- profiles3 %>%
   group_by(job) %>% 
@@ -99,16 +113,8 @@ profiles4 %>%
   knitr::kable()
 
 ggplot(data=profiles4, aes(x=job, y=avg_inc_by_job)) +
-  geom_point()
-
-# Proportion of Females in Each Job
-profiles5 <- profiles3 %>% 
-  group_by(job) %>% 
-  summarise(prop_female = mean(is_female)) %>% 
-  arrange(desc(prop_female))
-
-profiles5 %>% 
-  knitr::kable()
+  geom_point() +
+  coord_flip()
 
 # Average Income by Job Title by Gender
 profiles6 <- profiles3 %>% 
@@ -117,7 +123,8 @@ profiles6 <- profiles3 %>%
 
 ggplot(data=profiles6, aes(x=job, y=avg_inc_by_job_gender, col=as.factor(is_female))) +
   geom_point() +
-  labs(x="Job Title", y="Average Income", title="Average Income by Job Title")
+  labs(x="Job Title", y="Average Income", title="Average Income by Job Title") +
+  coord_flip()
   
 # Proportion of Females by Orientation 
 profiles2 %>% 
